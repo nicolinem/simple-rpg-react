@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import "./Canvas.css";
-import useCanvas from "./useCanvas";
+import useCanvas from "./hooks/useCanvas";
 
 const Canvas = (props) => {
   const { draw, ...rest } = props;
