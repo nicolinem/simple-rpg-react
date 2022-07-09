@@ -1,14 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import Canvas from "./Canvas";
-import useMap from "./useMap";
+import useMap from "./hooks/useMap";
 import topMap from "./images/maps/DemoUpper.png";
 import heroImage from "./images/characters/people/hero.png";
 import { store } from "./store.js";
 
 const GameMap = (props) => {
-  //   const globalState = useContext(store);
-  //   console.log(globalState.state);
-  //   console.log(globalState);
   const { mapID, x, y, position } = props;
   const [hero, setHero] = useState(null);
 
@@ -18,7 +15,6 @@ const GameMap = (props) => {
     const image = new Image();
     image.src = heroImage;
     image.onload = () => setHero(image);
-    // console.log(globalState);
   }, [position]);
 
   const draw = (ctx, frameCount) => {
