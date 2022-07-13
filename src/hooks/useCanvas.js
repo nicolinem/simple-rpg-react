@@ -1,27 +1,27 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Canvas from "../Canvas";
 import useMap from "../hooks/useMap";
 import topMap from "../images/maps/DemoUpper.png";
 import heroImage from "../images/characters/people/hero.png";
-import useMovement from "../hooks/useMovement";
+import useEventListener from "./useEventListener";
+import { drawCharacter } from "../draw";
+import utils from "../utils";
 
 const useCanvas = () => {
-  const canvasRef = useRef(null);
+  const canvasRef = useRef();
+  const frame = useRef(0);
+  const firstFrameTime = useRef(performance.now());
+  const { direction } = useEventListener();
+  const { topImage, bottomImage, characters, hero } = useMap();
 
-  const [hero, setHero] = useState(null);
+  // const [hero, setHero] = useState(null);
   const [movementProgressLeft, setMovementprogressLeft] = useState(0);
   const [currentDirection, setCurrentDirection] = useState();
-  const [startTime, setStartTime] = useState(null);
 
   const [position, setPosition] = useState({
-    x: 16 * 4,
-    y: 16 * 5,
+    x: utils.withGrid(5),
+    y: utils.withGrid(6),
   });
-
-  const { direction } = useMovement();
-
-  const { topImage, bottomImage } = useMap();
-
 
   const directionUpdate = {
     up: ["y", -1],
@@ -37,7 +37,6 @@ const useCanvas = () => {
       if (property !== undefined) {
         const dire = property[0];
         const change = property[1];
-        // console.log(dire);
         setPosition({ ...position, [dire]: (position[dire] += change) });
         console.log(position);
         console.log(movementProgressLeft);
@@ -56,43 +55,75 @@ const useCanvas = () => {
     }
   };
 
-  useEffect(() => {
-    const image = new Image();
-    image.src = heroImage;
-    image.onload = () => setHero(image);
-  }, [position]);
+  // useEffect(() => {
+  //   const image = new Image();
+  //   image.src = heroImage;
+  //   image.onload = () => setHero(image);
+  // }, [position]);
 
-  const draw = (ctx, frameCount) => {
-    if (bottomImage) {
+  const draw = (ctx) => {
+    // console.log("test", characters);
+    if (bottomImage && characters) {
       update();
-      // console.log(movementProgressLeft);
       ctx.clearRect(0, 0, 1056, 594);
-      ctx.drawImage(bottomImage, 0, 0);
+      // console.log(characters.find((sprite) => sprite.id === "hero"));
+      // console.log("hero", characters[0]);
+      // const cameraPerson = characters.find((sprite) => sprite.id === "hero");
+
       ctx.drawImage(
-        hero,
+        bottomImage,
+        utils.withGrid(10.5) - position.x + 8,
+        utils.withGrid(6) - position.y + 16
+      );
+
+      ctx.drawImage(
+        hero.imgSrc,
         0,
         0,
         32,
         32,
-        position.x - 8,
-        position.y - 18,
+        utils.withGrid(10.5),
+        utils.withGrid(6),
         32,
         32
       );
+      // console.log(characters);
+      for (const [key, value] of Object.entries(characters)) {
+        console.log("character", characters[key]);
+        console.log(value);
+        const character = characters[key];
+        console.log(character.x);
 
-      ctx.drawImage(topImage, 0, 0);
+        const x = character.x + 1 + utils.withGrid(10.5) - position.x;
+        console.log(x);
+        const y = character.y - 16 + utils.withGrid(6) - position.y;
+        console.log(y);
+        ctx.drawImage(character.imgSrc, 0, 0, 32, 32, x, y, 32, 32);
+        // drawCharacter(ctx, cameraPerson, character);
+        // ctx.drawImage(
+        //   characters[key].imgSrc,
+        //   0,
+        //   0,
+        //   32,
+        //   32,
+        //   characters[key].x + 10.5 * 16 - 4,
+        //   characters[key].y + 6 * 16 - 5,
+        //   32,
+        //   32
+        // );
+      }
+
+      ctx.drawImage(
+        topImage,
+        utils.withGrid(10.5) - position.x + 8,
+        utils.withGrid(6) - position.y + 16
+      );
     }
   };
-
-  const frame = React.useRef(0);
-
-  const firstFrameTime = React.useRef(performance.now());
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    let frameCount = 0;
-    console.log("test");
 
     const render = (time) => {
       let timeFraction = (time - firstFrameTime.current) / 1000;
@@ -101,8 +132,7 @@ const useCanvas = () => {
         timeFraction = 1;
       }
       if (timeFraction <= 1) {
-        frameCount++;
-        draw(ctx, frameCount);
+        draw(ctx);
         // request next frame only in cases when we not reached 100% of duration
         if (timeFraction != 1) frame.current = requestAnimationFrame(render);
       }
